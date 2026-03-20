@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
-
+import os
+from PIL import Image
 class Difference_of_Gaussian(object):
     def __init__(self, threshold):
         self.threshold = threshold
@@ -9,7 +10,7 @@ class Difference_of_Gaussian(object):
         self.num_DoG_images_per_octave = 4
         self.num_guassian_images_per_octave = self.num_DoG_images_per_octave + 1
 
-    def get_keypoints(self, image):
+    def get_keypoints(self, image, save_DoG_path = None, img_name = 'DoG_output'):
         """
         Detect DoG keypoints from a grayscale image.
 
@@ -27,7 +28,6 @@ class Difference_of_Gaussian(object):
         #   cv2.resize(..., interpolation=cv2.INTER_NEAREST),
         #   so shape becomes (H//2, W//2).
 
-        # downsize_image = cv2.resize(image, image.shape[0]//2, image.shape[1]//2)
 
         gaussian_images = []
 
@@ -36,15 +36,15 @@ class Difference_of_Gaussian(object):
 
         for _ in range(self.num_octaves):
             # oct_gaussian_imgs_imgs = [iter_img]
-            gaussian_images.append( np.ndarray( (self.num_guassian_images_per_octave, ) + iter_img.shape  ) )
+            gaussian_images.append( np.zeros( (self.num_guassian_images_per_octave, ) + iter_img.shape  ) )
+            gaussian_images[-1][0] = iter_img
             gaussian_filter_sigma = self.sigma
-            for i_img in range(self.num_guassian_images_per_octave):
+            for i_img in range(1, self.num_guassian_images_per_octave):
                 # print(iter_img)
-                iter_img = cv2.GaussianBlur(iter_img, ksize = (0,0), sigmaX = gaussian_filter_sigma)
+                gaussian_images[-1][i_img] = cv2.GaussianBlur(iter_img, ksize = (0,0), sigmaX = gaussian_filter_sigma)
                 # print(iter_img)
-                gaussian_images[-1][i_img] = iter_img
                 # pass
-                gaussian_filter_sigma = gaussian_filter_sigma*gaussian_filter_sigma
+                gaussian_filter_sigma *= self.sigma
 
             iter_img = gaussian_images[-1][-1]
             iter_img = cv2.resize(iter_img, (iter_img.shape[1]//2, iter_img.shape[0]//2), interpolation = cv2.INTER_NEAREST)        
@@ -53,18 +53,23 @@ class Difference_of_Gaussian(object):
 
         # Step 2: Build DoG pyramid (2 octaves, 4 DoG images per octave)
         # - For each octave, subtract adjacent Gaussian images:
-        #   DoG_i = Gaussian_{i+1} - Gaussian_i.
+        #   DoG_i = Gaussian_{i+1} Gaussian_i.
         # - Use cv2.subtract(second_image, first_image).
         # - DoG image shape is the same as its corresponding Gaussian image.
         dog_images = []
-        for octave_gaussian_imgs in gaussian_images:
+        for octave_idx, octave_gaussian_imgs in enumerate(gaussian_images):
             # oct_dog_imgs = []
-            dog_images.append( np.ndarray((self.num_DoG_images_per_octave, ) + octave_gaussian_imgs[0].shape) )
-            print(len(octave_gaussian_imgs))
+            dog_images.append( np.zeros((self.num_DoG_images_per_octave, ) + octave_gaussian_imgs[0].shape) )
+            # print(len(octave_gaussian_imgs))
             for i_img  in range(self.num_DoG_images_per_octave):
                 # pass
                 DoG_img = cv2.subtract( octave_gaussian_imgs[i_img + 1], octave_gaussian_imgs[i_img] )
                 dog_images[-1][i_img] = DoG_img
+
+                if save_DoG_path is not None:
+                    img_save_path = os.path.join(save_DoG_path, f'{img_name}_octave{octave_idx}_sigma{i_img+1}.jpg')
+                    DoG = Image.fromarray(DoG_img.astype(np.int8), mode = 'L')
+                    DoG.save(img_save_path)
 
             # dog_images.append( oct_dog_imgs )
         # Step 3: Threshold and find 3D local extrema in DoG volume
@@ -77,26 +82,48 @@ class Difference_of_Gaussian(object):
         # - Coordinates stored in keypoints must be in original image scale:
         #   octave 1 -> [y, x], octave 2 -> [2*y, 2*x].
         keypoints = []
-        print(len(dog_images))
-        print(len(dog_images[0]))
-        print([[img.shape for img in images] for images in dog_images])
 
         for i_octave in range(self.num_octaves):
+            base = 2**i_octave
             for i_img in range(1, len(dog_images[i_octave])-1):
                 base_img = dog_images[i_octave][i_img]
-                mask = base_img > self.threshold
+                mask = np.abs(base_img) > self.threshold
                 Y, X = np.where(mask)
 
                 for y,x in zip(Y, X):
                     dog_value = base_img[y, x]
                     # for 
-                    Ly, Ry = max([0, y-1]), min(base_img.shape[0], y+1)
-                    Lx, Rx = max([0, x-1]), min(base_img.shape[1], x+1)
+                    Ly, Ry = max([0, y-1]), min(base_img.shape[0], y+2)
+                    Lx, Rx = max([0, x-1]), min(base_img.shape[1], x+2)
+                    # dog_slice = dog_images[i_octave][i_img-1:i_img+2, Ly:Ry, Lx:Rx]
+                    # print(dog_slice.shape)
+                    # patch = []
+                    mx_neighborhood = -np.inf
+                    mn_neighborhood = np.inf
+                    # for nx in range(Lx, Rx):
+                    #     for ny in range(Ly, Ry):
+                    #         if ny ==y and nx == x:
+                    #             continue
+                    #         neighbor_val = dog_images[i_octave][i_img][ny][nx]
+                    #         mx_neighborhood = neighbor_val if neighbor_val > mx_neighborhood else mx_neighborhood
+                    #         mn_neighborhood = neighbor_val if neighbor_val < mn_neighborhood else mn_neighborhood
+
+                    for s in [-1, 0, 1]:
+                        mx_neighborhood = max([
+                            mx_neighborhood,
+                            np.max(dog_images[i_octave][i_img + s][Ly:Ry, Lx:Rx])
+                        ])
+
+                        mn_neighborhood = min([
+                            mn_neighborhood,
+                            np.min(dog_images[i_octave][i_img + s][Ly:Ry, Lx:Rx])
+                        ])
                     
                     try:
-                        if dog_value >= np.max( dog_images[i_octave][i_img-1:i_img+1, Ly:Ry, Lx:Rx] ):
+                        if dog_value >= mx_neighborhood or dog_value <= mn_neighborhood:
                         # continue
-                            keypoints.append( (y,x) )
+                            keypoints.append( (y*base, x*base) )
+
                     except Exception as e:
                         print(i_img, Ly, Ry, Lx, Rx)
                         print([(type(img), img.shape) for img in dog_images[i_octave][i_img-1:i_img+1]])
@@ -109,9 +136,11 @@ class Difference_of_Gaussian(object):
         # Step 4: Remove duplicate keypoints
         # - Use np.unique(..., axis=0).
         # - Expected shape after this step: (N, 2).
+        print('number of keypoints:', len(keypoints))
         keypoints = np.asarray(keypoints)
+        # keypoints = np.unique(keypoints)
         keypoints = np.unique(keypoints, axis = 0)
-
         # Sort points using np.lexsort((col, row)) -> primary key col, secondary key row.
         keypoints = keypoints[np.lexsort((keypoints[:,1],keypoints[:,0]))]
+        # print(keypoints)
         return keypoints
