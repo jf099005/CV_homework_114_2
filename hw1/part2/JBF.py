@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 
 class Joint_bilateral_filter(object):
     def __init__(self, sigma_s, sigma_r):
@@ -32,5 +33,31 @@ class Joint_bilateral_filter(object):
 
         ### TODO ###
         # Note: Pixel values should be normalized to [0, 1] (divided by 255) to construct range kernel.
-            
+        output = np.zeros(img.shape)
+
+        # img_diff = [[[0]*3]*3]
+        
+        # weights = np.zeros(img.shape)
+        total_weights = np.zeros(img.shape)
+
+        for shift_y in range(-self.pad_w, self.pad_w+1):
+            for shift_x in range(-self.pad_w, self.pad_w+1):
+                Ly = self.pad_w + shift_y
+                Ry = Ly + img.shape[0]
+                Lx = self.wndw_size + shift_x
+                Rx = Lx + img.shape[1]
+                shifted_img = padded_img[Ly:Ry, Lx:Rx]
+                # img_diff = padded_img[:-shift_y, :-shift_x] - padded_guidance[shift_y: , shift_y]
+                guidance_diff = guidance - padded_guidance[Ly:Ry, Lx:Rx]
+                guidance_diff_sq = guidance_diff*guidance_diff
+                gaussian_weight = math.exp(-(shift_y**2 + shift_x**2)/(2*self.sigma_s**2))
+                range_kernel = np.exp(-guidance_diff_sq/(2*self.sigma_r**2))
+                output += gaussian_weight*range_kernel*shifted_img
+                total_weights += gaussian_weight*range_kernel
+
+        output /= total_weights
+
+
+
+
         return np.clip(output, 0, 255).astype(np.uint8)
