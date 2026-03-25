@@ -74,7 +74,7 @@ class Joint_bilateral_filter(object):
                 range_kernel = range_kernel[:,:,np.newaxis]
                 weighted_img = gaussian_weight*range_kernel*shifted_img
                 output += weighted_img
-            total_weights += gaussian_weight*range_kernel
+                total_weights += gaussian_weight*range_kernel
 
         output /= total_weights
         return np.clip(output, 0, 255).astype(np.uint8)
