@@ -48,13 +48,13 @@ class Joint_bilateral_filter(object):
 
             # gaussian_weights = [[math.exp(-(a**2 + b**2)/(2*(self.sigma_s**2))) for b in range(3+1)] for a in range(3+1)]
 
-        y, x = np.ogrid[-self.pad_w : self.pad_w + 1, -self.pad_w : self.pad_w + 1]
+        # y, x = np.ogrid[-self.pad_w : self.pad_w + 1, -self.pad_w : self.pad_w + 1]
         # spatial_kernel = np.exp(-(x**2 + y**2) / (2 * (self.sigma_s**2)))
         # y = np.ogrid
-        gaussian_1d_weights = np.exp( -x**2/(2*self.sigma_s**2) )
+        # gaussian_1d_weights = np.exp( -x**2/(2*self.sigma_s**2) )
 
         for shift_y in range(-self.pad_w, self.pad_w+1):
-            Y_shift_weights = np.zeros((img.shape[0], img.shape[1], 1), dtype=self.precision)
+            # Y_shift_weights = np.zeros((img.shape[0], img.shape[1], 1), dtype=self.precision)
             
             for shift_x in range(-self.pad_w, self.pad_w+1):
                 Ly = self.pad_w + shift_y

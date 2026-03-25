@@ -49,51 +49,53 @@ class Joint_bilateral_filter(object):
         img_width = img.shape[1]
         print('shape', img.shape)
         print('padding', self.pad_w)
-        
-        inv_2_sigma_s_sq = 1.0 / (2 * (self.sigma_s ** 2))
-        inv_2_sigma_r_sq = 1.0 / (2 * (self.sigma_r ** 2))
-
         for shift_y in range(self.pad_w+1):
-            
             for shift_x in range(-self.pad_w, self.pad_w+1):
-                if(shift_y == 0 and shift_x <= 0):
+                
+                # Fix 2: Prevent double counting on the Y=0 axis and skip (0,0)
+                if shift_y == 0 and shift_x <= 0:
                     continue
+                
                 Lp = max([0, shift_x])
                 Ln = max([0, -shift_x])
+                
                 guidance_diff =\
                     padded_guidance[:padded_guidance.shape[0] - shift_y, Ln:padded_guidance.shape[1] - Lp]\
                     - padded_guidance[shift_y:, Lp:padded_guidance.shape[1] - Ln]
-                # print('shape of gd:', guidance_diff.shape)
-                # print('shape of img:', img.shape)
+                
                 guidance_diff_sq = guidance_diff*guidance_diff
-                guidance_diff_sq = np.sum(guidance_diff_sq, axis=2, keepdims=True)
-                gaussian_weight = math.exp(-(shift_y**2 + shift_x**2)*inv_2_sigma_s_sq)
-                range_kernel_pool = np.exp(-guidance_diff_sq*inv_2_sigma_r_sq)
-                # range_kernel_pool = range_kernel_pool[:,:,np.newaxis]
-
+                guidance_diff_sq = np.sum(guidance_diff_sq, axis=2)
+                
+                gaussian_weight = math.exp(-(shift_y**2 + shift_x**2)/(2*(self.sigma_s**2)))
+                range_kernel_pool = np.exp(-guidance_diff_sq/(2*(self.sigma_r**2)))
+                
                 range_kernel1 = range_kernel_pool[
                     self.pad_w - shift_y: self.pad_w - shift_y + img_height ,\
                     self.pad_w - Lp: self.pad_w - Lp + img_width
                 ]
-                # range_kernel1 = range_kernel1[:,:,np.newaxis]
+                range_kernel1 = range_kernel1[:,:,np.newaxis]
 
- 
                 range_kernel2 = range_kernel_pool[
                     self.pad_w: self.pad_w + img_height,
                     self.pad_w - Ln: self.pad_w -Ln + img_width
-                ]  #np.exp(-guidance_diff_sq/(2*(self.sigma_r**2)))
-                # range_kernel2 = range_kernel2[:,:,np.newaxis]
+                ]  
+                range_kernel2 = range_kernel2[:,:,np.newaxis]
 
                 L1 = self.pad_w - shift_x
                 L2 = self.pad_w + shift_x
 
-                output += gaussian_weight*(
-                    range_kernel1*padded_img[self.pad_w - shift_y: self.pad_w - shift_y + img_height, L1: L1 + img_width] + \
-                    range_kernel2*padded_img[self.pad_w + shift_y: self.pad_w + shift_y + img_height, L2: L2 + img_width]
-                )
-                # weighted_img *= gaussian_weight
-                # output += weighted_img
+                weighted_img = range_kernel1*padded_img[self.pad_w - shift_y: self.pad_w - shift_y + img_height, L1: L1 + img_width] + \
+                               range_kernel2*padded_img[self.pad_w + shift_y: self.pad_w + shift_y + img_height, L2: L2 + img_width]
+                
+                weighted_img *= gaussian_weight
+                output += weighted_img
                 total_weights += gaussian_weight*(range_kernel1 + range_kernel2)
 
         output /= total_weights
-        return np.clip(output, 0, 255).astype(np.uint8)
+        result = np.clip(output, 0, 255).astype(np.uint8)
+        
+        # Fix 3: Squeeze the output back to 2D if the input was grayscale
+        # if is_grayscale_img:
+        #     result = np.squeeze(result, axis=2)
+            
+        return result
