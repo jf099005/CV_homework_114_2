@@ -29,7 +29,7 @@ def main():
 
     # 畫 keypoints
     for y, x in keypoints:   # 注意你的格式是 (row, col)
-        cv2.circle(img_color, (int(x), int(y)), 2, (0, 0, 255), -1)  # 藍色點
+        cv2.circle(img_color, (int(x), int(y)), 4, (255, 0, 0), -1)  # 藍色點
 
     im = Image.fromarray(img_color)
     im.save("output.png")

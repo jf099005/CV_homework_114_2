@@ -178,10 +178,10 @@ def train(
 
         ##### WRITE LOG #####
         is_better = val_acc >= best_acc
-        if best_acc <= 0.1 and is_better:
-            is_better = False
-            val_acc = max([val_acc, best_acc])
-            best_acc = val_acc
+        # if best_acc <= 0.1 and is_better:
+        #     is_better = False
+        #     val_acc = max([val_acc, best_acc])
+        #     best_acc = val_acc
         
         epoch_time = train_time + val_time
         write_result_log(os.path.join(logfile_dir, 'result_log.txt'),
@@ -192,12 +192,13 @@ def train(
 
         ##### SAVE THE BEST MODEL #####
         if is_better:
-            print(f'[{epoch + 1}/{cfg.epochs}] Save best model to {save_path} ...')
             if save_path:
+                print(f'[{epoch + 1}/{cfg.epochs}] Save best model to {save_path} ...')
                 torch.save(model.state_dict(),
                        save_path)
             
             else:
+                print(f'[{epoch + 1}/{cfg.epochs}] Save best model to {model_save_dir} ...')
                 torch.save(model.state_dict(),
                        os.path.join(model_save_dir, 'model_best.pth'))
             best_acc = val_acc
@@ -320,7 +321,9 @@ def main():
           criterion=criterion,
           optimizer=optimizer,
           scheduler=scheduler,
-          device=device)
+          device=device,
+          save_path=args.save_path
+    )
     
 if __name__ == '__main__':
     main()

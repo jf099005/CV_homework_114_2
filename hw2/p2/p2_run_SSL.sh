@@ -1,6 +1,6 @@
 ### example for running the python files
 
-threshold=.9
+threshold=.95
 project_root=/mnt/20F408ADF408876E/114_2/computer_vision/homeworks/hw2/p2
 dataset_root=/mnt/20F408ADF408876E/114_2/computer_vision/hw2_data/p2_data
 ### Training (We would only run for checking your code is executable)

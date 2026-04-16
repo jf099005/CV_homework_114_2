@@ -46,7 +46,19 @@ def read_file(file_path):
 
 def L1Norm(img1, img2):
     assert img1.shape == img2.shape
-    return np.sum( np.abs(img1 - img2) )#/(img1.shape[0]*img1.shape[1])
+    return np.sum( np.abs(img1.astype(np.int32) - img2.astype(np.int32)) )#/(img1.shape[0]*img1.shape[1])
+
+def check_img(img_jbf, guidance, baseline, output_folder = None):
+    if output_folder:
+        os.makedirs(output_folder, exist_ok=True)
+        cv2.imwrite(os.path.join(output_folder, 'img_jbf.png'), cv2.cvtColor(img_jbf, cv2.COLOR_RGB2BGR))
+        cv2.imwrite( os.path.join(output_folder, 'img_gray.png'), guidance )
+
+    error = L1Norm(baseline, img_jbf)
+    print("\t\t L1 Norm:", error)
+    return error
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='main function of joint bilateral filter')
@@ -60,55 +72,43 @@ def main():
     img = cv2.imread(args.image_path)
     img_rgb = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 
-    jbf_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_rgb).astype(np.uint8)
-    jbf_filtered_bgr = cv2.cvtColor(jbf_filtered, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(os.path.join(output_root, 'img_jbf.png'), jbf_filtered_bgr)
-
     colors, (sigma_s, sigma_r) = read_file(args.setting_path)
-
-    JBF = Joint_bilateral_filter(sigma_s, sigma_r)
-
     print('Running Bilateral filter with sigma_s', sigma_s, ', sigma_r', sigma_r)
     output_root = f'output_{filename}'
     os.makedirs(output_root, exist_ok=True)
     shutil.copy(args.image_path, f'{output_root}/ref_image.png')
 
+    JBF = Joint_bilateral_filter(sigma_s = sigma_s, sigma_r = sigma_r)
+
+    jbf_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_rgb).astype(np.uint8)
+    baseline = jbf_filtered
+
+    output_folder = os.path.join(output_root, 'COLOR_BGR2GRAY')
     print('\t testing cv2-conversion')
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    output_folder = f'{output_root}/cv2_transform'
-    os.makedirs(output_folder, exist_ok=True)
-    cv2.imwrite( os.path.join(output_folder, 'img_gray.png'), img_gray )
-    # jbf_gray_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_gray).astype(np.uint8)
-    jbf_gray_filtered = JBF.joint_bilateral_filter(img = jbf_filtered, guidance = img_gray).astype(np.uint8)
+    jbf_gray_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_gray).astype(np.uint8)
 
-    jbf_gray_filtered_bgr = cv2.cvtColor(jbf_gray_filtered, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(os.path.join(output_folder, 'img_jbf.png'), jbf_gray_filtered_bgr)
-    cv2.imwrite( os.path.join(output_folder, 'img_gray.png'), img_gray )
-    error = L1Norm(jbf_filtered, jbf_gray_filtered)
-    print("\t\t L1 Norm:", error)
-
+    check_img(jbf_gray_filtered, img_gray, baseline, output_folder)
 
     for (r,g,b) in colors:
         print('\t testing color (r, g, b)', (r,g,b))
         img_gray = (r*img_rgb[:,:,0] + g*img_rgb[:,:,1] + b*img_rgb[:,:,2])
         img_gray = np.clip(img_gray, 0, 255).astype(np.uint8)
-
-        # print('shape of gray:', img_gray.shape)
-
         output_folder = f'{output_root}/r{r}_g{g}_b{b}'
-        os.makedirs(output_folder, exist_ok=True)
-        cv2.imwrite( os.path.join(output_folder, 'img_gray.png'), img_gray )
-        # jbf_gray_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_gray).astype(np.uint8)
-        jbf_gray_filtered = JBF.joint_bilateral_filter(img = jbf_filtered, guidance = img_gray).astype(np.uint8)
-        error = L1Norm(jbf_filtered, jbf_gray_filtered)
-        print("\t\t L1 Norm:", error)
+        jbf_gray_filtered = JBF.joint_bilateral_filter(img = img_rgb, guidance = img_gray).astype(np.uint8)    
+        check_img(jbf_gray_filtered, img_gray, baseline, output_folder)
 
-        jbf_gray_filtered_bgr = cv2.cvtColor(jbf_gray_filtered, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(os.path.join(output_folder, 'img_jbf.png'), jbf_gray_filtered_bgr)
-        # gray_out_bgr = cv2.cvtColor(img_gray, )
-        cv2.imwrite( os.path.join(output_folder, 'img_gray.png'), img_gray )
 
-    ### TODO ###
+    # 在 main() 最後加上這段
+    print('\n--- Sanity check ---')
+    # 用全黑 guidance（全部對比度為 0），range kernel 全為 1，退化為純 Gaussian blur
+    zero_guidance = np.zeros_like(img_gray)
+    jbf_zero = JBF.joint_bilateral_filter(img=img_rgb, guidance=zero_guidance).astype(np.uint8)
+    print('Zero guidance (pure Gaussian) L1:', L1Norm(img_rgb, jbf_zero))
+
+    # 用原圖 guidance（完整 bilateral），L1 應該最小
+    jbf_self = JBF.joint_bilateral_filter(img=img_rgb, guidance=img_rgb).astype(np.uint8)
+    print('Self guidance (full bilateral) L1:', L1Norm(img_rgb, jbf_self))
 
 
 if __name__ == '__main__':
