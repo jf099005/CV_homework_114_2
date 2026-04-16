@@ -62,6 +62,9 @@ def get_tiny_images(img_paths: str, height: int=16, width: int=16):
         img = Image.open(sample_path)
         tiny_img = img.resize( (height, width) )
         tiny_img = np.array(tiny_img)
+        tiny_img = tiny_img - np.mean(tiny_img)
+        tiny_img = tiny_img / (np.linalg.norm(tiny_img) + 1e-8)
+
         tiny_img_feats.append( tiny_img.flatten() )
         # pass
 
@@ -83,7 +86,7 @@ def build_vocabulary(
         img_paths: list, 
         vocab_size: int = 400,
         debug = False, 
-        stepsize = 10
+        stepsize = 15
     ):
     '''
     Args:
@@ -136,13 +139,36 @@ def build_vocabulary(
         img = np.array(img)
         _, descriptions = dsift(img, step = [stepsize, stepsize], fast = debug)
 
-        for desp in descriptions:
-            vocab_pool.append( desp.astype(np.float32) )
+        # sampled = descriptions[np.random.choice(
+        #     len(descriptions), 
+        #     size=min(1000, len(descriptions)), 
+        #     replace=False
+        # )]
+
+        vocab_pool.extend(descriptions.astype(np.float32))
+
+        # for desp in descriptions:
+        #     vocab_pool.append( desp.astype(np.float32) )
+
     vocab_pool = np.array(vocab_pool)
     ##################################################################################
     #                                END OF YOUR CODE                                #
     ##################################################################################
-    vocab = kmeans(vocab_pool, num_centers=vocab_size)
+    # vocab = kmeans(vocab_pool, num_centers=vocab_size, verbose = True)
+    
+    
+    from sklearn.cluster import KMeans
+    kmeans_model = KMeans(
+        n_clusters=vocab_size,
+        max_iter=100,
+        verbose=1,
+        n_init=1
+    )
+
+    kmeans_model.fit(vocab_pool)
+    print('End of build vocabulary')
+    vocab = kmeans_model.cluster_centers_
+
     return vocab
 
 ###### Step 1-b-2
@@ -205,17 +231,24 @@ def get_bags_of_sifts(
         img = np.array(img)
         # img2D = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         frames, descriptors = dsift(img, step=[stepsize,stepsize], fast=debug)
-        descriptors =descriptors[::3]
+        # descriptors =descriptors[::3]
+        idx = np.random.choice(len(descriptors), size=min(200, len(descriptors)), replace=False)
+        descriptors = descriptors[idx]
+
         #histogram
         #for each img:
         #    for each feature: (may different)
         #        find closet feature from vocab 
-        dist = cdist(vocab, descriptors)  
+        dist = cdist(descriptors, vocab)  
         kmin = np.argmin(dist, axis = 0)
         hist, bin_edges = np.histogram(kmin, bins=len(vocab))
-        hist_norm = [float(i)/sum(hist) for i in hist]
-        image_feats.append(hist_norm)
-    image_feats = np.matrix(image_feats)
+        # hist_norm = [float(i)/sum(hist) for i in hist]
+
+        hist = hist.astype(np.float32)
+        hist /= (np.sum(hist) + 1e-8)
+
+        image_feats.append(hist)
+    # image_feats = np.matrix(image_feats)
     #print("image_feats.shape", image_feats.shape)
     #############################################################################
     #                                END OF YOUR CODE                           #
@@ -231,7 +264,8 @@ def get_bags_of_sifts(
 def nearest_neighbor_classify(
         train_img_feats: np.array,
         train_labels: list,
-        test_img_feats: list 
+        test_img_feats: list,
+        metric='cosine'
     ):
     '''
     Args:
@@ -280,13 +314,18 @@ def nearest_neighbor_classify(
     #     distances = []
     label = np.array(train_labels) 
     # print('label arr:', label)
-    dis = cdist(test_img_feats, train_img_feats, metric='cityblock')
+    dis = cdist(test_img_feats, train_img_feats, metric=metric)
 
     test_predicts = []
-    for row in dis:
+    for row in tqdm(dis, desc='inferencing...'):
         kmin = np.argpartition(row, k)[:k]
         # print("kmin:", kmin)
-        test_predicts.append( mode([ CAT2ID[L] for L in label[kmin] ]) )
+        labels = [CAT2ID[L] for L in label[kmin]]
+        counts = np.bincount(labels)
+        pred = np.argmax(counts)
+        test_predicts.append(pred)
+
+        # test_predicts.append( mode([ CAT2ID[L] for L in label[kmin] ]) )
         # print("label:", mode(label[kmin])[0][0])
     #############################################################################
     #                                END OF YOUR CODE                           #
