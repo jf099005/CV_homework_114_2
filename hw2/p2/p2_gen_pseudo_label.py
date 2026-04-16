@@ -134,7 +134,7 @@ def main():
             f,
             indent=2
         )
-    print(f'Pseudo Label generation ended, totally {len(labels)} sasmples.')
+    print(f'Pseudo Label generation ended, totally {len(labels)} samples.')
 
 if __name__ == '__main__':
     main()

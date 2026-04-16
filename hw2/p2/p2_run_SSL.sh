@@ -7,9 +7,9 @@ dataset_root=/mnt/20F408ADF408876E/114_2/computer_vision/hw2_data/p2_data
 label=0416
 model_path=./checkpoint/resnet18_best_${label}.pth
 
-python p2_train.py\
-    --dataset_dir ${dataset_root}\
-    --save_path ${model_path}
+# python p2_train.py\
+#     --dataset_dir ${dataset_root}\
+#     --save_path ${model_path}
 
 
 for n_iter in {1..2};do

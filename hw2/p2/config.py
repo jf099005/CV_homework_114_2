@@ -23,4 +23,6 @@ epochs = 30                # train how many epochs
 batch_size = 256            # batch size for dataloader 
 use_adam = False           # Adam or SGD optimizer
 lr = 1e-3              # learning rate
-milestones = [15, 30, 45]  # reduce learning rate at 'milestones' epochs
+# milestones = [15, 30, 45]  # reduce learning rate at 'milestones' epochs
+      # learning rate
+milestones = [10, 20]  # reduce learning rate at 'milestones' epochs
