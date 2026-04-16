@@ -152,7 +152,11 @@ class CIFAR10Dataset(Dataset):
             'labels': label
         }
     
-def concat_loaders(base_dataloader:DataLoader, extra_dataloader:DataLoader):
+def concat_loaders(base_dataloader:DataLoader, extra_dataloader:DataLoader, batch_size:int, split:str):
     combined_dataset = ConcatDataset([base_dataloader.dataset, extra_dataloader.dataset])
-    combined_loader = DataLoader(combined_dataset, ...)
+    combined_loader = DataLoader(combined_dataset, batch_size=batch_size,
+                            shuffle=(split=='train'),
+                            num_workers=0,
+                            pin_memory=True, 
+                            drop_last=(split=='train'))
     return combined_loader

@@ -80,6 +80,7 @@ def train(
         optimizer: torch.optim,
         scheduler: torch.optim,
         device: torch.device,
+        save_path: str = None,
     ):
     '''
     Training and validation process.
@@ -177,6 +178,11 @@ def train(
 
         ##### WRITE LOG #####
         is_better = val_acc >= best_acc
+        if best_acc <= 0.1 and is_better:
+            is_better = False
+            val_acc = max([val_acc, best_acc])
+            best_acc = val_acc
+        
         epoch_time = train_time + val_time
         write_result_log(os.path.join(logfile_dir, 'result_log.txt'),
                          epoch, epoch_time,
@@ -186,8 +192,13 @@ def train(
 
         ##### SAVE THE BEST MODEL #####
         if is_better:
-            print(f'[{epoch + 1}/{cfg.epochs}] Save best model to {model_save_dir} ...')
-            torch.save(model.state_dict(),
+            print(f'[{epoch + 1}/{cfg.epochs}] Save best model to {save_path} ...')
+            if save_path:
+                torch.save(model.state_dict(),
+                       save_path)
+            
+            else:
+                torch.save(model.state_dict(),
                        os.path.join(model_save_dir, 'model_best.pth'))
             best_acc = val_acc
 
@@ -208,10 +219,20 @@ def main():
                         help='dataset directory', 
                         type=str, 
                         default='../hw2_data/p2_data/')
+    
     parser.add_argument('--extra_data_annotations', 
-                        help='dataset directory', 
+                        help='path to pseudo labels', 
                         type=str, 
                         default=None)
+
+
+    parser.add_argument('--checkpoint', 
+                        type=str, 
+                        default=None)
+    
+    parser.add_argument('--save_path',
+                        type=str,
+                        default = '')
 
     args = parser.parse_args()
 
@@ -246,6 +267,11 @@ def main():
     else:
         raise NameError('Unknown model type')
 
+    if args.checkpoint is not None:
+        model.load_state_dict(torch.load(args.checkpoint, 
+                                    map_location=torch.device('cpu')))
+
+
     model.to(device)
 
     ##### DATALOADER #####
@@ -263,7 +289,12 @@ def main():
             unlabel_annotation_path=args.extra_data_annotations
         )
 
-        train_loader = concat_loaders(train_loader, pseudo_labelled_loader)
+        train_loader = concat_loaders(
+            train_loader,
+            pseudo_labelled_loader,
+            batch_size=cfg.batch_size,
+            split='train'
+        )
         pass
 
 
