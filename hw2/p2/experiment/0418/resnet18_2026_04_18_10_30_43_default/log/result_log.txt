@@ -1,0 +1,40 @@
+[1/40] 9.43 sec(s) Train Acc: 0.70201 | Val Acc: 0.82140 | Train Loss: 0.85657 | Val Loss: 0.51955 -> val best (acc)
+[2/40] 10.00 sec(s) Train Acc: 0.70570 | Val Acc: 0.82440 | Train Loss: 0.82948 | Val Loss: 0.50227 -> val best (acc)
+[3/40] 11.36 sec(s) Train Acc: 0.71296 | Val Acc: 0.82700 | Train Loss: 0.81912 | Val Loss: 0.49907 -> val best (acc)
+[4/40] 11.15 sec(s) Train Acc: 0.72174 | Val Acc: 0.82880 | Train Loss: 0.78844 | Val Loss: 0.48823 -> val best (acc)
+[5/40] 9.31 sec(s) Train Acc: 0.72248 | Val Acc: 0.83640 | Train Loss: 0.78837 | Val Loss: 0.47413 -> val best (acc)
+[6/40] 9.20 sec(s) Train Acc: 0.72540 | Val Acc: 0.83660 | Train Loss: 0.77518 | Val Loss: 0.47061 -> val best (acc)
+[7/40] 10.55 sec(s) Train Acc: 0.73164 | Val Acc: 0.83740 | Train Loss: 0.76009 | Val Loss: 0.46394 -> val best (acc)
+[8/40] 10.64 sec(s) Train Acc: 0.73880 | Val Acc: 0.84180 | Train Loss: 0.74335 | Val Loss: 0.45883 -> val best (acc)
+[9/40] 10.53 sec(s) Train Acc: 0.74048 | Val Acc: 0.84300 | Train Loss: 0.73579 | Val Loss: 0.44510 -> val best (acc)
+[10/40] 10.62 sec(s) Train Acc: 0.74597 | Val Acc: 0.85260 | Train Loss: 0.72217 | Val Loss: 0.42710 -> val best (acc)
+[11/40] 10.62 sec(s) Train Acc: 0.74488 | Val Acc: 0.85120 | Train Loss: 0.72193 | Val Loss: 0.42724
+[12/40] 10.70 sec(s) Train Acc: 0.74640 | Val Acc: 0.85480 | Train Loss: 0.71411 | Val Loss: 0.42128 -> val best (acc)
+[13/40] 10.81 sec(s) Train Acc: 0.75397 | Val Acc: 0.85980 | Train Loss: 0.69444 | Val Loss: 0.40867 -> val best (acc)
+[14/40] 9.00 sec(s) Train Acc: 0.75369 | Val Acc: 0.85920 | Train Loss: 0.69226 | Val Loss: 0.40643
+[15/40] 9.00 sec(s) Train Acc: 0.76070 | Val Acc: 0.86220 | Train Loss: 0.67777 | Val Loss: 0.40284 -> val best (acc)
+[16/40] 10.32 sec(s) Train Acc: 0.75788 | Val Acc: 0.86120 | Train Loss: 0.67929 | Val Loss: 0.39324
+[17/40] 10.51 sec(s) Train Acc: 0.76170 | Val Acc: 0.86480 | Train Loss: 0.67175 | Val Loss: 0.39672 -> val best (acc)
+[18/40] 10.02 sec(s) Train Acc: 0.76660 | Val Acc: 0.86660 | Train Loss: 0.65766 | Val Loss: 0.39217 -> val best (acc)
+[19/40] 10.57 sec(s) Train Acc: 0.76864 | Val Acc: 0.86400 | Train Loss: 0.65457 | Val Loss: 0.39695
+[20/40] 10.78 sec(s) Train Acc: 0.77234 | Val Acc: 0.86920 | Train Loss: 0.64868 | Val Loss: 0.38995 -> val best (acc)
+[21/40] 8.99 sec(s) Train Acc: 0.77538 | Val Acc: 0.87080 | Train Loss: 0.62923 | Val Loss: 0.38367 -> val best (acc)
+[22/40] 9.10 sec(s) Train Acc: 0.77482 | Val Acc: 0.87060 | Train Loss: 0.63234 | Val Loss: 0.38416
+[23/40] 11.39 sec(s) Train Acc: 0.77438 | Val Acc: 0.87240 | Train Loss: 0.63597 | Val Loss: 0.38236 -> val best (acc)
+[24/40] 10.92 sec(s) Train Acc: 0.77503 | Val Acc: 0.87260 | Train Loss: 0.63473 | Val Loss: 0.37973 -> val best (acc)
+[25/40] 10.97 sec(s) Train Acc: 0.77404 | Val Acc: 0.86920 | Train Loss: 0.63212 | Val Loss: 0.38342
+[26/40] 11.02 sec(s) Train Acc: 0.77475 | Val Acc: 0.87320 | Train Loss: 0.63366 | Val Loss: 0.37972 -> val best (acc)
+[27/40] 11.29 sec(s) Train Acc: 0.77752 | Val Acc: 0.87320 | Train Loss: 0.62198 | Val Loss: 0.37835 -> val best (acc)
+[28/40] 11.30 sec(s) Train Acc: 0.77423 | Val Acc: 0.87280 | Train Loss: 0.63521 | Val Loss: 0.37836
+[29/40] 11.48 sec(s) Train Acc: 0.77528 | Val Acc: 0.87100 | Train Loss: 0.63593 | Val Loss: 0.37915
+[30/40] 12.74 sec(s) Train Acc: 0.77429 | Val Acc: 0.87320 | Train Loss: 0.63383 | Val Loss: 0.37955 -> val best (acc)
+[31/40] 13.08 sec(s) Train Acc: 0.77724 | Val Acc: 0.87200 | Train Loss: 0.62982 | Val Loss: 0.38083
+[32/40] 12.65 sec(s) Train Acc: 0.77745 | Val Acc: 0.87160 | Train Loss: 0.62085 | Val Loss: 0.38008
+[33/40] 12.02 sec(s) Train Acc: 0.78195 | Val Acc: 0.87220 | Train Loss: 0.61752 | Val Loss: 0.37838
+[34/40] 12.40 sec(s) Train Acc: 0.77503 | Val Acc: 0.87100 | Train Loss: 0.63386 | Val Loss: 0.38142
+[35/40] 13.20 sec(s) Train Acc: 0.77984 | Val Acc: 0.87300 | Train Loss: 0.62664 | Val Loss: 0.37868
+[36/40] 12.61 sec(s) Train Acc: 0.77330 | Val Acc: 0.87140 | Train Loss: 0.63629 | Val Loss: 0.38011
+[37/40] 12.82 sec(s) Train Acc: 0.77876 | Val Acc: 0.87220 | Train Loss: 0.62549 | Val Loss: 0.37873
+[38/40] 10.86 sec(s) Train Acc: 0.78071 | Val Acc: 0.87200 | Train Loss: 0.61525 | Val Loss: 0.37838
+[39/40] 10.96 sec(s) Train Acc: 0.77882 | Val Acc: 0.87420 | Train Loss: 0.62564 | Val Loss: 0.37771 -> val best (acc)
+[40/40] 10.84 sec(s) Train Acc: 0.77947 | Val Acc: 0.87220 | Train Loss: 0.62161 | Val Loss: 0.38080

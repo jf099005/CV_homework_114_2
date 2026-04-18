@@ -1,0 +1,29 @@
+# ============================================================================
+# File: config.py
+# Date: 2026-03-27
+# Author: TA
+# Description: Experiment configurations.
+# ============================================================================
+
+################################################################
+# NOTE:                                                        #
+# You can modify these values to train with different settings #
+# p.s. this file is only for training                          #
+################################################################
+
+# Experiment Settings
+exp_name = 'default'  # name of experiment
+
+# Model Options
+# model_type = 'resnet18'  # 'mynet' or 'resnet18'
+model_type = 'mynet'  # 'mynet' or 'resnet18'
+
+# Learning Options
+epochs = 40                # train how many epochs
+# batch_size = 32            # batch size for dataloader 
+batch_size = 256            # batch size for dataloader 
+use_adam = False           # Adam or SGD optimizer
+lr = 1e-3              # learning rate
+# milestones = [15, 30, 45]  # reduce learning rate at 'milestones' epochs
+      # learning rate
+milestones = [20, 30]  # reduce learning rate at 'milestones' epochs

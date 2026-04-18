@@ -35,7 +35,6 @@ def validate(model, val_loader, device, threshold):
             val_n_total += len(indexes)
             cond_val_correct += torch.sum( pseudo_labels[indexes] == labels[indexes] )
 
-    # Print validation result
     cond_val_acc = cond_val_correct / val_n_total
     return cond_val_acc
 
@@ -43,10 +42,10 @@ def validate(model, val_loader, device, threshold):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_type',
-                        help='mynet or resnet18',
-                        type=str,
-                        default='resnet18')
+    # parser.add_argument('--model_type',
+    #                     help='mynet or resnet18',
+    #                     type=str,
+    #                     default='resnet18')
     parser.add_argument('--model_path',
                         type = str,
                         default = './checkpoint/resnet18_best.pth')
@@ -67,7 +66,7 @@ def main():
     
     args = parser.parse_args()
 
-    model_type = args.model_type
+    model_type = cfg.model_type
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('Device:', device)
 

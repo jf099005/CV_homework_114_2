@@ -41,6 +41,11 @@ def main():
                         default='../hw2_data/p1_data/')
     parser.add_argument('--vocab_size', help='number of vocabulary', type=int,
                         default = 400)
+
+    parser.add_argument('--step_size', type=int,
+                        default = 5)
+
+
     parser.add_argument('--debug', action='store_true')
 
     args = parser.parse_args()
@@ -65,7 +70,12 @@ def main():
         if os.path.isfile(vocab_name) is False:
             print('No existing visual word vocabulary found. Computing one from training images')
             # vocab_size = 400  # vocab_size is up to you, larger values will work better (to a point) but be slower to compute
-            vocab = build_vocabulary(train_img_paths, vocab_size = args.vocab_size,debug = args.debug)
+            vocab = build_vocabulary(
+                train_img_paths,
+                vocab_size = args.vocab_size,
+                debug = args.debug,
+                stepsize = args.step_size
+            )
             with open(vocab_name, 'wb') as f:
                 pickle.dump(vocab, f, protocol=pickle.HIGHEST_PROTOCOL)
         else:
@@ -74,7 +84,7 @@ def main():
         # train_image_feats
         train_img_feats_name = f'train_image_feats_{args.vocab_size}.pkl'
         if os.path.isfile(train_img_feats_name) is False:
-            train_img_feats = get_bags_of_sifts(train_img_paths, vocab)
+            train_img_feats = get_bags_of_sifts(train_img_paths, vocab, stepsize = args.step_size, debug = args.debug)
             with open(train_img_feats_name, 'wb') as f:
                 pickle.dump(train_img_feats, f, protocol=pickle.HIGHEST_PROTOCOL)
         else:
@@ -83,7 +93,7 @@ def main():
         # test_image_feats
         test_img_pkl_paths = f'test_image_feats_{args.vocab_size}.pkl'
         if os.path.isfile(test_img_pkl_paths) is False:
-            test_img_feats  = get_bags_of_sifts(test_img_paths, vocab)
+            test_img_feats  = get_bags_of_sifts(test_img_paths, vocab, stepsize = args.step_size, debug = args.debug)
             with open(test_img_pkl_paths, 'wb') as f:
                 pickle.dump(test_img_feats, f, protocol=pickle.HIGHEST_PROTOCOL)
         else:

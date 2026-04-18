@@ -1,0 +1,7 @@
+Experiment Name = default
+Model Type      = resnet18
+Num epochs      = 40
+Batch size      = 256
+Use adam        = False
+Learning rate   = 0.001
+Scheduler step  = [20, 30]

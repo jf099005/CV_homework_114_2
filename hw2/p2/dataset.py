@@ -9,13 +9,13 @@ import os
 import json
 import torch
 import torchvision.transforms as transforms
+# from torchvision.transforms import autoaugment
 from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
 from PIL import Image
 from torch.utils.data import ConcatDataset
 
-
-
+NUM_WORKERS = 4
 def get_dataloader(
         dataset_dir,
         batch_size: int = 1,
@@ -37,11 +37,12 @@ def get_dataloader(
     ###############################
     if split == 'train':
         transform = transforms.Compose([
+            # autoaugment.AutoAugment(policy=autoaugment.AutoAugmentPolicy.CIFAR10),
             transforms.Resize((32,32)),
-            ##### TODO: Data Augmentation Begin #####
-            transforms.RandomCrop(32, padding=4),              # 隨機裁切 + padding
-            transforms.RandomHorizontalFlip(p=0.5),            # 隨機水平翻轉
-            transforms.RandomRotation(15),                     # 小角度旋轉
+            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.TrivialAugmentWide(),
+            transforms.RandomRotation(15),
 
             transforms.ColorJitter(
                 brightness=0.2,
@@ -49,10 +50,13 @@ def get_dataloader(
                 saturation=0.2,
                 hue=0.1
             ),
-            ##### TODO: Data Augmentation End #####
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+
+            transforms.Normalize(
+                mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
+            ),
+
+            transforms.RandomErasing(p=0.5, scale=(0.02, 0.15), ratio=(0.3, 3.3), value=0)
         ])
 
     else: # 'val' or 'test'
@@ -75,7 +79,7 @@ def get_dataloader(
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             shuffle=(split=='train'),
-                            num_workers=0,
+                            num_workers=NUM_WORKERS,
                             pin_memory=True, 
                             drop_last=(split=='train'))
     return dataloader
@@ -156,7 +160,7 @@ def concat_loaders(base_dataloader:DataLoader, extra_dataloader:DataLoader, batc
     combined_dataset = ConcatDataset([base_dataloader.dataset, extra_dataloader.dataset])
     combined_loader = DataLoader(combined_dataset, batch_size=batch_size,
                             shuffle=(split=='train'),
-                            num_workers=0,
+                            num_workers=NUM_WORKERS,
                             pin_memory=True, 
                             drop_last=(split=='train'))
     return combined_loader
