@@ -17,7 +17,13 @@ def transform(img, canvas, corners):
                   [w, h],
                   [0, h]
                   ])
+    print('canvas size:', canvas.shape)
+    print("img size:", img.shape)
+    # cv2.imwrite('canvas.png', canvas)
     H = solve_homography(x, corners)
+    
+    print('det(H):', np.linalg.det(H))
+    
     
     return  warping(img, canvas, H, 0, h, 0, w, direction='f')
 
@@ -26,6 +32,10 @@ if __name__ == "__main__":
 
     # ================== Part 1: Homography Estimation ========================
     canvas = cv2.imread('../resource/times.jpg')
+
+    # print('origin canvas size:', canvas.shape)
+    # cv2.imwrite('canvas.png', canvas)
+
     # TODO: 1.you can use whatever images you like, include these images in the img directory
     img1 = cv2.imread('../resource/img1.jpg')
     img2 = cv2.imread('../resource/img2.jpg')

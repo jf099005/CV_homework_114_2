@@ -73,36 +73,52 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
     :param direction: indicates backward warping or forward warping
     :return: destination output image
     """
-    
-    # TODO: 1.meshgrid the (x,y) coordinate pairs
-    src_x, src_y = np.meshgrid(np.arange(xmin, xmax), np.arange(ymin, ymax))
+            
     # TODO: 2.reshape the destination pixels as N x 3 homogeneous coordinate
-    src_x = src_x.flatten()
-    src_y = src_y.flatten()
-    src_M = np.stack((src_x, src_y, np.ones_like(src_x.flatten())), axis=1)
-    src_M = src_M.T
+    # src_x = src_x.flatten()
+    # src_y = src_y.flatten()
+    # M_src = np.stack((src_x, src_y, np.ones_like(src_x.flatten())), axis=1)
+    # M_src = M_src.T
 
     if direction == 'b':
         # TODO: 3.apply H_inv to the destination pixels and retrieve (u,v) pixels, then reshape to (ymax-ymin),(xmax-xmin)
-        # H = np.linalg.inv(H)
+        dst_x, dst_y = np.meshgrid(np.arange(0, dst.shape[1]), np.arange(0, dst.shape[0]))
+        # TODO: 2.reshape the destination pixels as N x 3 homogeneous coordinate
+        dst_x = dst_x.flatten()
+        dst_y = dst_y.flatten()
+        M_dst = np.stack((dst_x, dst_y, np.ones_like(dst_x.flatten())), axis=1)
+        M_dst = M_dst.T
+
+        H_inv = np.linalg.inv(H)
+
+        # print("H inv check:", np.matmul(H_inv, H))
+
+        M_backward = np.matmul(H_inv, M_dst)
         # TODO: 4.calculate the mask of the transformed coordinate (should not exceed the boundaries of source image)
 
         # TODO: 5.sample the source image with the masked and reshaped transformed coordinates
 
         # TODO: 6. assign to destination image with proper masking
 
-        M_dst = np.matmul(H, src_M)
-        M_dst = M_dst/M_dst[2, :]
-        print("M_dst shape: ", M_dst.shape)
-        grid_dst = M_dst.T.astype(int)#.reshape(h_dst, w_dst, 1)
-        print('shape of grid_dst:', grid_dst.shape)
-        print("first 5:", grid_dst[:5])
-        print('src shape:', src_x.shape, src_y.shape)
-        for (x,y, _), sx, sy in zip(grid_dst, src_x, src_y):
-            # if xmin <= x < xmax and ymin <= y < ymax:
-                # print(y, x, sy, sx)
-                src[sy, sx] = dst[y, x]
-        return src
+        eps = 1e-8
+        M_backward = M_backward / (M_backward[2:3, :] + eps)
+
+        grid_backward = M_backward.T.astype(int)#.reshape(h_dst, w_dst, 1)
+        paste_sth = False
+
+        # print('grid first 5'    , grid_backward[:5])
+        # print('src size', src.shape)
+
+        mask = (xmin <= grid_backward[:, 0]) & (grid_backward[:, 0] < xmax) & (ymin <= grid_backward[:, 1]) & (grid_backward[:, 1] < ymax)
+        dst[ dst_y[mask], dst_x[mask] ] = src[grid_backward[mask][:, 1], grid_backward[mask][:, 0]]
+        # mask &= (0 <= dst_x) & (dst_x < dst.shape[1]) & (0 <= dst_y) & (dst_y < dst.shape[0])
+        # for (sx,sy, _), x, y in zip(grid_backward, dst_x, dst_y):
+        #     if xmin <= sx < xmax and ymin <= sy < ymax:
+        #         paste_sth = True
+        #         dst[y, x] = src[sy, sx]
+        # if not paste_sth:
+        #     print("No pixel is pasted, please check the homography matrix and the warping range")
+        return dst
 
 
     elif direction == 'f':
@@ -114,16 +130,33 @@ def warping(src, dst, H, ymin, ymax, xmin, xmax, direction='b'):
 
         # TODO: 6. assign to destination image using advanced array indicing
 
-        print(H.shape, src_M.shape)
-        M_dst = np.matmul(H, src_M)
-        M_dst = M_dst/M_dst[2, :]
-        print("M_dst shape: ", M_dst.shape)
-        grid_dst = M_dst.T.astype(int)#.reshape(h_dst, w_dst, 1)
-        print('shape of grid_dst:', grid_dst.shape)
-        print("first 5:", grid_dst[:5])
-        print('src shape:', src_x.shape, src_y.shape)
-        for (x,y, _), sx, sy in zip(grid_dst, src_x, src_y):
-            # if xmin <= x < xmax and ymin <= y < ymax:
-                # print(sy, sx)
-            dst[y, x] = src[sy, sx]
+        # TODO: 1.meshgrid the (x,y) coordinate pairs
+        src_x, src_y = np.meshgrid(np.arange(xmin, xmax), np.arange(ymin, ymax))
+        # TODO: 2.reshape the destination pixels as N x 3 homogeneous coordinate
+        src_x = src_x.flatten()
+        src_y = src_y.flatten()
+
+
+        M_src = np.stack((src_x, src_y, np.ones_like(src_x.flatten())), axis=1)
+        M_src = M_src.T
+
+
+        # print(H.shape, M_src.shape)
+        M_dst = np.matmul(H, M_src)
+        eps = 1e-8
+        M_dst = M_dst / (M_dst[2:3, :] + eps) # Use 2:3 to keep dimensions consistent
+        grid_dst = np.nan_to_num(M_dst.T).astype(int)        # print('shape of grid_dst:', grid_dst.shape)
+
+        mask = (0 <= grid_dst[:, 0]) & (grid_dst[:, 0] < dst.shape[1]) & (0 <= grid_dst[:, 1]) & (grid_dst[:, 1] < dst.shape[0])
+        dst[ grid_dst[mask][:, 1], grid_dst[mask][:, 0] ] = src[src_y[mask], src_x[mask]]
+
+        # for (x,y, _), sx, sy in zip(grid_dst, src_x, src_y):
+        #     if xmin <= sx < xmax and ymin <= sy < ymax:
+        #             # print(sy, sx)
+        #         try:
+        #             dst[y, x] = src[sy, sx]
+        #         except:
+        #             print(y,x, sy, sx)
+        #             print("Error when assigning pixel value, please check the homography matrix and the warping range")
+        #             raise Exception("Error when assigning pixel value, please check the homography matrix and the warping range")
         return dst

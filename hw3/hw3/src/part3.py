@@ -9,9 +9,9 @@ def back_transform(src, canvas, corners):
                   [w, h],
                   [0, h]
                   ])
-    H = solve_homography(x, corners)
+    H = solve_homography(corners, x)
     
-    return  warping(src, canvas, H, 0, h, 0, w, direction='b')
+    return  warping(canvas, src, H, 0, canvas.shape[0], 0, canvas.shape[1], direction='b')
 
 
 
@@ -26,11 +26,15 @@ if __name__ == '__main__':
     
 
     # TODO: call solve_homography() & warping
+    # src = np.ones((h, w, c))*225
     src = np.zeros((h, w, c))
     output3_1 = back_transform(src, secret1, corners1)
     
+
     src = np.zeros((h, w, c))
+    # src = np.ones((h, w, c))*225
+
     output3_2 = back_transform(src, secret2, corners2)
 
-    cv2.imwrite('output3_1.png', output3_1)
-    cv2.imwrite('output3_2.png', output3_2)
+    cv2.imwrite('output3_1.png', output3_1.astype(np.uint8))
+    cv2.imwrite('output3_2.png', output3_2.astype(np.uint8))
